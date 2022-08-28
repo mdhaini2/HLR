@@ -1,4 +1,4 @@
-package com.hlr.hlr.Utils;
+package com.hlr.hlr.Security;
 
 
 import com.hlr.hlr.Exceptions.PhoneNumberInvalidException;

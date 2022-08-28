@@ -1,4 +1,4 @@
-package com.hlr.hlr.Utils;
+package com.hlr.hlr.Security;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;

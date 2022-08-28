@@ -4,6 +4,7 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import java.sql.Timestamp;
 import java.util.Date;
 
 @Entity
@@ -19,6 +20,12 @@ public class Users {
     private Date birthday;
 
     private String password;
+
+    private Date createdDate;
+    private Date updatedDate;
+
+    public Users() {
+    }
 
 
     public int getId() {
@@ -83,5 +90,25 @@ public class Users {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public Date getCreatedDate() {
+        return createdDate;
+    }
+
+    public void setCreatedDate(long timeStamp) {
+        Timestamp ts =new Timestamp(timeStamp);
+        Date date=new Date(ts.getTime());
+        this.createdDate = date;
+    }
+
+    public Date getUpdatedDate() {
+        return updatedDate;
+    }
+
+    public void setUpdatedDate(long timeStamp) {
+        Timestamp ts =new Timestamp(timeStamp);
+        Date date=new Date(ts.getTime());
+        this.updatedDate = date;
     }
 }
