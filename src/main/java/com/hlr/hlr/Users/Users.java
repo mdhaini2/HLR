@@ -1,11 +1,13 @@
 package com.hlr.hlr.Users;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.hlr.hlr.UserSubscribeService.UserSubscribeService;
+
+import javax.persistence.*;
 import java.sql.Timestamp;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 public class Users {
@@ -20,6 +22,10 @@ public class Users {
     private Date birthday;
 
     private String password;
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "users")
+    private Set<UserSubscribeService> userSubscribeServiceSet  = new HashSet<UserSubscribeService>();
 
     private Date createdDate;
     private Date updatedDate;
