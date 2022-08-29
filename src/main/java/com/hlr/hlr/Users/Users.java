@@ -18,7 +18,6 @@ public class Users {
     private String phoneNumber;
     private String address;
     private String lineType;
-    private boolean isPostPaid;
     private Date birthday;
     private double balance;
 
@@ -75,14 +74,6 @@ public class Users {
         this.lineType = lineType;
     }
 
-    public boolean isPostPaid() {
-        return isPostPaid;
-    }
-
-    public void setPostPaid(boolean postPaid) {
-        isPostPaid = postPaid;
-    }
-
     public Date getBirthday() {
         return birthday;
     }
@@ -135,11 +126,4 @@ public class Users {
         this.userSubscribeServiceSet = userSubscribeServiceSet;
     }
 
-    public void setCreatedDate(Date createdDate) {
-        this.createdDate = createdDate;
-    }
-
-    public void setUpdatedDate(Date updatedDate) {
-        this.updatedDate = updatedDate;
-    }
 }

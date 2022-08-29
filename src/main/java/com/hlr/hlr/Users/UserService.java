@@ -9,17 +9,23 @@ import com.hlr.hlr.Exceptions.PhoneNumberInvalidException;
 import com.hlr.hlr.Exceptions.UsersNotFoundException;
 import com.hlr.hlr.Security.JwtUtil;
 import com.hlr.hlr.Security.MyUserDetailsService;
+import com.hlr.hlr.UserSubscribeService.UserSubscribeService;
+import com.hlr.hlr.UserSubscribeService.UserSubscribeServiceRepository;
 import com.hlr.hlr.Utils.Response;
+import com.hlr.hlr.Utils.UserBalance;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Service
 @Log4j2
@@ -37,9 +43,11 @@ public class UserService {
     private HttpServletRequest request;
     @Autowired
     private MyUserDetailsService userDetailsService;
+    @Autowired
+    private UserSubscribeServiceRepository userSubscribeServiceRepository;
     private long currentTimeStamp = System.currentTimeMillis();
 
-    public Object registerUser(Users user) throws NumberParseException, PhoneNumberInvalidException {
+    public Object registerUser(Users user) throws NumberParseException, PhoneNumberInvalidException, CredentialsNotValidException {
         // Phone number validator
         PhoneNumberUtil phoneNumberUtil = PhoneNumberUtil.getInstance();
         String userPhoneNumber = String.valueOf(user.getPhoneNumber());
@@ -70,6 +78,15 @@ public class UserService {
             log.error("User with phone number: " + user.getPhoneNumber() + " already exists!");
             throw new PhoneNumberInvalidException("User with phone number: " + user.getPhoneNumber() + " already exists!");
         }
+
+        String lineType = user.getLineType().trim();
+        log.error("Line Type equals " + lineType.equalsIgnoreCase("prepaid"));
+        if (!lineType.equalsIgnoreCase("prepaid") && !lineType.equalsIgnoreCase("postpaid")) {
+            log.error("Not valid line type " + user.getLineType());
+            throw new CredentialsNotValidException(user.getLineType() + " is not a valid line type");
+
+        }
+
 
         user.setPassword(new BCryptPasswordEncoder().encode(user.getPassword()));
 
@@ -117,19 +134,27 @@ public class UserService {
     public Response updateUserProfile(Users updateUser) {
 
         Users user = getUserFromToken();
-        log.info("got user from token");
+        log.info("updateUserProfile: got user from token");
 
         user.setAddress(updateUser.getAddress());
         user.setFullName(updateUser.getFullName());
+        String lineType = updateUser.getLineType();
+        if (!lineType.equalsIgnoreCase(user.getLineType())) {
+            user.setLineType(lineType);
+            log.info("updateUserProfile: changing line type for user and deleting all services subscribed to");
+            user.setUserSubscribeServiceSet(null);
+            userSubscribeServiceRepository.deleteByUsers(user);
+        }
         user.setUpdatedDate(currentTimeStamp);
 
-        log.info("saving user updates to Database");
+        log.info("updateUserProfile: saving user updates to Database");
         userRepository.save(user);
 
         log.info("User updated successfully");
         Response response = new Response("User profile updated Successfully", user);
         return response;
     }
+
     public Users getUserFromToken() {
 
         log.info("Get user from token");
@@ -169,6 +194,29 @@ public class UserService {
         final String jwt = jwtTokenUtil.generateToken(userDetails);
 
         Response response = new Response("User " + user.getFullName() + " logged in successfully", jwt);
+        return response;
+    }
+
+    public Object checkBalance() {
+        Users user = getUserFromToken();
+        Set<UserSubscribeService> userSubscribeServiceSet = new HashSet<UserSubscribeService>();
+        for (UserSubscribeService userSubscribeService : user.getUserSubscribeServiceSet()) {
+            if (userSubscribeService.getStatus().equalsIgnoreCase("Active")) {
+                userSubscribeServiceSet.add(userSubscribeService);
+            }
+        }
+        UserBalance userBalance = new UserBalance(user.getBalance(), userSubscribeServiceSet);
+        return userBalance;
+    }
+
+    public Object addCredits(double credits) throws CredentialsNotValidException {
+        Users user = getUserFromToken();
+        if(user.getLineType().equalsIgnoreCase("postpaid")){
+            throw new CredentialsNotValidException("User have a postpaid line type can't add credits");
+        }
+        user.setBalance(user.getBalance()+credits);
+        userRepository.save(user);
+        Response response = new Response("Added "+credits+" to user.",user.getBalance());
         return response;
     }
 }

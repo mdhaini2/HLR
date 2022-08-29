@@ -35,8 +35,7 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http.csrf().disable().authorizeRequests()
-                .antMatchers("/user-server/login", "/user-server/register").permitAll()
-//               .antMatchers("/uniProject/getAllUsers", "/uniProject/updateUser").hasAnyRole("user")
+                .antMatchers("/api/users/login","/api/users/register").permitAll()
                 .anyRequest().authenticated().and()
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
 

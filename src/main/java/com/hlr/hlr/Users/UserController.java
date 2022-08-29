@@ -16,10 +16,13 @@ public class UserController {
     UserService userService;
 
     @PostMapping(value = "/register")
-    public Object registerUser(@RequestBody Users user) throws NumberParseException, PhoneNumberInvalidException {
+    public Object registerUser(@RequestBody Users user) throws NumberParseException, PhoneNumberInvalidException, CredentialsNotValidException {
         return userService.registerUser(user);
     }
-
+    @GetMapping(value = "/login")
+    public Object loginUser(@RequestParam String phoneNumber, @RequestParam String password) throws PhoneNumberInvalidException, NumberParseException, CredentialsNotValidException {
+        return userService.loginUser(phoneNumber,password);
+    }
     @GetMapping(value = "/getAllUsers")
     public Object getAllUsers() throws UsersNotFoundException {
         return userService.getAllUsers();
@@ -33,5 +36,13 @@ public class UserController {
         return  userService.updateUserProfile(user);
     }
 
+    @GetMapping(value = "/checkBalance")
+    public Object checkBalance(){
+        return userService.checkBalance();
+    }
+    @PostMapping(value = "/addCredits")
+    public Object addCredits(@RequestParam double credits) throws CredentialsNotValidException {
+        return userService.addCredits(credits);
+    }
 
 }

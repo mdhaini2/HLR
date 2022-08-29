@@ -75,12 +75,32 @@ public class GlobalException {
     }
 
     @ExceptionHandler
-    public ResponseEntity<ResponseError> handleUserAlreadyReservedBookException(UserAlreadyReservedBookException exception) {
+    public ResponseEntity<ResponseError> handleUserAlreadySubscribedToServiceException(UserAlreadySubscribedToServiceException exception) {
         ResponseError errorObject = new ResponseError();
         errorObject.setStatus(HttpStatus.CONFLICT.value());
         errorObject.setMessage(exception.getMessage());
         errorObject.setTime(System.currentTimeMillis());
         return new ResponseEntity<ResponseError>(errorObject, HttpStatus.CONFLICT);
+
+    }
+
+    @ExceptionHandler
+    public ResponseEntity<ResponseError> handleServiceAlreadyExists(ServiceAlreadyExistsException exception) {
+        ResponseError errorObject = new ResponseError();
+        errorObject.setStatus(HttpStatus.CONFLICT.value());
+        errorObject.setMessage(exception.getMessage());
+        errorObject.setTime(System.currentTimeMillis());
+        return new ResponseEntity<ResponseError>(errorObject, HttpStatus.CONFLICT);
+
+    }
+
+    @ExceptionHandler
+    public ResponseEntity<ResponseError> handleInsufficientAmountException(InsufficientAmountException exception) {
+        ResponseError errorObject = new ResponseError();
+        errorObject.setStatus(HttpStatus.NOT_ACCEPTABLE.value());
+        errorObject.setMessage(exception.getMessage());
+        errorObject.setTime(System.currentTimeMillis());
+        return new ResponseEntity<ResponseError>(errorObject, HttpStatus.NOT_ACCEPTABLE);
 
     }
 

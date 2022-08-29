@@ -1,10 +1,12 @@
 package com.hlr.hlr.UserSubscribeService;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.hlr.hlr.Service.Services;
 import com.hlr.hlr.Users.Users;
 
 import javax.persistence.*;
-import java.sql.Date;
+import java.util.Date;
+import java.sql.Timestamp;
 
 @Entity
 public class UserSubscribeService {
@@ -17,19 +19,23 @@ public class UserSubscribeService {
     private Date createdDate;
     private Date updateDate;
 
-
+    @JsonIgnore
     @ManyToOne
     @JoinColumn(name = "service_id")
     private Services services;
-
+    @JsonIgnore
     @ManyToOne
     @JoinColumn(name = "users_id")
     private Users users;
 
-    public UserSubscribeService(String status, String currentData, Date createdDate, Services services, Users users) {
+
+    public UserSubscribeService() {
+    }
+
+    public UserSubscribeService(String status, String currentData, long timeStamp, Services services, Users users) {
         this.status = status;
         this.currentData = currentData;
-        this.createdDate = createdDate;
+        setCreatedDate(timeStamp);
         this.services = services;
         this.users = users;
     }
@@ -79,16 +85,21 @@ public class UserSubscribeService {
         return createdDate;
     }
 
-    public void setCreatedDate(Date createdDate) {
-        this.createdDate = createdDate;
+    public void setCreatedDate(long timeStamp) {
+        Timestamp ts =new Timestamp(timeStamp);
+        Date date=new java.util.Date(ts.getTime());
+        this.createdDate = date;
     }
 
     public Date getUpdateDate() {
         return updateDate;
     }
 
-    public void setUpdateDate(Date updateDate) {
-        this.updateDate = updateDate;
+    public void setUpdateDate(long timeStamp) {
+
+        Timestamp ts =new Timestamp(timeStamp);
+        Date date=new java.util.Date(ts.getTime());
+        this.updateDate = date;
     }
 
     public Services getServices() {
