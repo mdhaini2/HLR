@@ -125,4 +125,9 @@ public class UserSubscribeService {
         expirationDate.add(Calendar.DAY_OF_MONTH,serviceDuration);
         this.expirationDate = expirationDate.getTime();
     }
+
+    @Override
+    public String toString() {
+        return services.getServiceName()+": "+this.currentData+" EXP: "+this.expirationDate;
+    }
 }

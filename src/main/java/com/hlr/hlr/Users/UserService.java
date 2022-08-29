@@ -200,12 +200,15 @@ public class UserService {
     public Object checkBalance() {
         Users user = getUserFromToken();
         Set<UserSubscribeService> userSubscribeServiceSet = new HashSet<UserSubscribeService>();
+        String services="";
         for (UserSubscribeService userSubscribeService : user.getUserSubscribeServiceSet()) {
             if (userSubscribeService.getStatus().equalsIgnoreCase("Active")) {
                 userSubscribeServiceSet.add(userSubscribeService);
+                services+= userSubscribeService.toString();
             }
         }
-        UserBalance userBalance = new UserBalance(user.getBalance(), userSubscribeServiceSet);
+
+        UserBalance userBalance = new UserBalance(user.getBalance(), services);
         return userBalance;
     }
 
