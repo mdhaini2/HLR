@@ -1,7 +1,7 @@
 package com.hlr.hlr.Filters;
 
-import com.lms.LibraryManagementSystem.Services.MyUserDetailsService;
-import com.lms.LibraryManagementSystem.Utils.JwtUtil;
+import com.hlr.hlr.Security.JwtUtil;
+import com.hlr.hlr.Security.MyUserDetailsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;

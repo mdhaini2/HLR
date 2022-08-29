@@ -9,7 +9,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Entity
-public class Service {
+public class Services {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
@@ -23,7 +23,7 @@ public class Service {
     private Date updatedDate;
 
     @JsonIgnore
-    @OneToMany(mappedBy = "service")
+    @OneToMany(mappedBy = "services",cascade = {CascadeType.ALL})
     private Set<UserSubscribeService> userReservedBooks  = new HashSet<UserSubscribeService>();
 
 

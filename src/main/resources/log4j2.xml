@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration statusEntity="info" monitorInterval="30">
+    <Properties>
+        <Property name="LOG-PATH">
+            logs
+        </Property>
+        <Property name="LOG_PATTERN">
+            level=%p ts=%d{yyyy-MM-dd HH:mm:ss.SSS} caller=%t component=%C discovery=D msg=%m%n%ex
+        </Property>
+        <Property name="CONSOLE_LOG_PATTERN">
+            level=%p ts=%d{yyyy-MM-dd HH:mm:ss.SSS} caller=%t component=%C discovery=D msg=%m%n%ex
+        </Property>
+        <Property name="DATE_PATTERN">
+            %d{yyyy-MM-dd}-%i
+        </Property>
+    </Properties>
+
+    <Appenders>
+
+        <!-- Console Appender -->
+        <Console name="ConsoleAppender" target="SYSTEM_OUT" follow="true">
+            <PatternLayout pattern="${CONSOLE_LOG_PATTERN}"/>
+
+
+        </Console>
+
+        <!-- Root File Appender -->
+        <RollingFile name="ReportFileAppender" fileName="${LOG-PATH}/logging.log"
+                     filePattern="${LOG-PATH}/logging-${DATE_PATTERN}.log.zip" append="true">
+            <PatternLayout>
+                <Pattern>${LOG_PATTERN}</Pattern>
+            </PatternLayout>
+            <Filters>
+
+                <!-- Deny warn-->
+                <ThresholdFilter level="warn" onMatch="DENY" onMismatch="NEUTRAL"/>
+
+
+                <!-- Then accept info, warn, error, fatal and deny debug/trace -->
+                <ThresholdFilter level="info" onMatch="ACCEPT" onMismatch="DENY"/>
+            </Filters>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1"/>
+            </Policies>
+            <DefaultRolloverStrategy max="10">
+                <Delete basePath="${LOG_PATH}/" maxDepth="2">
+                    <IfLastModified age="10d"/>
+                </Delete>
+            </DefaultRolloverStrategy>
+        </RollingFile>
+
+
+        <!-- Error File Appender -->
+        <RollingFile name="ErrorFileAppender" fileName="${LOG-PATH}/error.log"
+                     filePattern="${LOG-PATH}/error-${DATE_PATTERN}.log.zip" append="true">
+            <PatternLayout>
+                <Pattern>${LOG_PATTERN}</Pattern>
+            </PatternLayout>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1"/>
+            </Policies>
+            <DefaultRolloverStrategy max="10">
+                <Delete basePath="${LOG_PATH}/" maxDepth="2">
+                    <IfLastModified age="10d"/>
+                </Delete>
+            </DefaultRolloverStrategy>
+        </RollingFile>
+
+        <!-- Warn File Appender -->
+        <RollingFile name="WarnFileAppender" fileName="${LOG-PATH}/warn.log"
+                     filePattern="${LOG-PATH}/warn-${DATE_PATTERN}.log.zip" append="true">
+            <PatternLayout>
+                <Pattern>${LOG_PATTERN}</Pattern>
+            </PatternLayout>
+
+            <Filters>
+                <ThresholdFilter level="error" onMatch="DENY" onMismatch="NEUTRAL"/>
+                <!-- Then accept info, warn, error, fatal and deny debug/trace -->
+                <ThresholdFilter level="warn" onMatch="ACCEPT" onMismatch="DENY"/>
+            </Filters>
+
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1"/>
+            </Policies>
+            <DefaultRolloverStrategy max="10">
+                <Delete basePath="${LOG_PATH}/" maxDepth="2">
+                    <IfLastModified age="10d"/>
+                </Delete>
+            </DefaultRolloverStrategy>
+        </RollingFile>
+
+
+    </Appenders>
+
+    <Loggers>
+
+        <Root level="info">
+            <AppenderRef ref="ConsoleAppender" level="info"/>
+            <AppenderRef ref="ErrorFileAppender" level="error"/>
+            <AppenderRef ref="ReportFileAppender" level="info"/>
+            <AppenderRef ref="WarnFileAppender" level="warn"/>
+        </Root>
+
+
+    </Loggers>
+
+
+</Configuration>

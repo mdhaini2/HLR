@@ -53,15 +53,6 @@ public class GlobalException {
 
     }
 
-    @ExceptionHandler
-    public ResponseEntity<ResponseError> handleBooksNotFoundException(BooksNotFoundException exception) {
-        ResponseError errorObject = new ResponseError();
-        errorObject.setStatus(HttpStatus.NOT_FOUND.value());
-        errorObject.setMessage(exception.getMessage());
-        errorObject.setTime(System.currentTimeMillis());
-        return new ResponseEntity<ResponseError>(errorObject, HttpStatus.NOT_FOUND);
-
-    }
 
     @ExceptionHandler
     public ResponseEntity<ResponseError> handelCredentialsNotValidException(CredentialsNotValidException exception) {
@@ -70,6 +61,16 @@ public class GlobalException {
         errorObject.setMessage(exception.getMessage());
         errorObject.setTime(System.currentTimeMillis());
         return new ResponseEntity<ResponseError>(errorObject, HttpStatus.BAD_REQUEST);
+
+    }
+
+    @ExceptionHandler
+    public ResponseEntity<ResponseError> handleServicesNotFoundException(ServicesNotFoundException exception) {
+        ResponseError errorObject = new ResponseError();
+        errorObject.setStatus(HttpStatus.NOT_FOUND.value());
+        errorObject.setMessage(exception.getMessage());
+        errorObject.setTime(System.currentTimeMillis());
+        return new ResponseEntity<ResponseError>(errorObject, HttpStatus.NOT_FOUND);
 
     }
 

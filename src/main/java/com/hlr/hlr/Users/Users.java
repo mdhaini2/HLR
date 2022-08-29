@@ -20,11 +20,12 @@ public class Users {
     private String lineType;
     private boolean isPostPaid;
     private Date birthday;
+    private double balance;
 
     private String password;
 
     @JsonIgnore
-    @OneToMany(mappedBy = "users")
+    @OneToMany(mappedBy = "users",cascade = {CascadeType.ALL})
     private Set<UserSubscribeService> userSubscribeServiceSet  = new HashSet<UserSubscribeService>();
 
     private Date createdDate;
@@ -116,5 +117,29 @@ public class Users {
         Timestamp ts =new Timestamp(timeStamp);
         Date date=new Date(ts.getTime());
         this.updatedDate = date;
+    }
+
+    public double getBalance() {
+        return balance;
+    }
+
+    public void setBalance(double balance) {
+        this.balance = balance;
+    }
+
+    public Set<UserSubscribeService> getUserSubscribeServiceSet() {
+        return userSubscribeServiceSet;
+    }
+
+    public void setUserSubscribeServiceSet(Set<UserSubscribeService> userSubscribeServiceSet) {
+        this.userSubscribeServiceSet = userSubscribeServiceSet;
+    }
+
+    public void setCreatedDate(Date createdDate) {
+        this.createdDate = createdDate;
+    }
+
+    public void setUpdatedDate(Date updatedDate) {
+        this.updatedDate = updatedDate;
     }
 }

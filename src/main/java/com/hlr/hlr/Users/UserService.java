@@ -8,10 +8,12 @@ import com.hlr.hlr.Exceptions.CredentialsNotValidException;
 import com.hlr.hlr.Exceptions.PhoneNumberInvalidException;
 import com.hlr.hlr.Exceptions.UsersNotFoundException;
 import com.hlr.hlr.Security.JwtUtil;
+import com.hlr.hlr.Security.MyUserDetailsService;
 import com.hlr.hlr.Utils.Response;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -33,7 +35,8 @@ public class UserService {
     private JwtUtil jwtTokenUtil;
     @Autowired
     private HttpServletRequest request;
-
+    @Autowired
+    private MyUserDetailsService userDetailsService;
     private long currentTimeStamp = System.currentTimeMillis();
 
     public Object registerUser(Users user) throws NumberParseException, PhoneNumberInvalidException {
@@ -95,6 +98,7 @@ public class UserService {
 
     public Object deleteUser(int id) throws CredentialsNotValidException {
         Optional<Users> optimalUser = userRepository.findById(id);
+
         if (optimalUser.isEmpty()) {
             log.error("user not found");
             throw new CredentialsNotValidException("User with user id: " + id + " does not exists!");
@@ -113,20 +117,58 @@ public class UserService {
     public Response updateUserProfile(Users updateUser) {
 
         Users user = getUserFromToken();
+        log.info("got user from token");
 
         user.setAddress(updateUser.getAddress());
         user.setFullName(updateUser.getFullName());
         user.setUpdatedDate(currentTimeStamp);
+
+        log.info("saving user updates to Database");
         userRepository.save(user);
 
+        log.info("User updated successfully");
         Response response = new Response("User profile updated Successfully", user);
         return response;
     }
     public Users getUserFromToken() {
 
+        log.info("Get user from token");
         String token = jwtTokenUtil.getToken(request);
         String phoneNumber = jwtTokenUtil.extractUsername(token);
         Users user = userRepository.findByPhoneNumber(phoneNumber);
         return user;
+    }
+
+    public Object loginUser(String inputPhoneNumber, String password) throws PhoneNumberInvalidException, NumberParseException, CredentialsNotValidException {
+        // Phone number validator
+        PhoneNumberUtil phoneNumberUtil = PhoneNumberUtil.getInstance();
+        String userPhoneNumber = String.valueOf(inputPhoneNumber);
+        Phonenumber.PhoneNumber number = new Phonenumber.PhoneNumber();
+        number.setCountryCode(countryCode);
+        number.setNationalNumber(Long.valueOf(userPhoneNumber));
+
+        log.info(phoneNumberUtil.isPossibleNumber(number));
+        if (!phoneNumberUtil.isPossibleNumber(number)) {
+            throw new PhoneNumberInvalidException(inputPhoneNumber + " is not a valid phone number");
+        }
+
+        userPhoneNumber = String.valueOf(Long.valueOf(userPhoneNumber));
+        Users user = userRepository.findByPhoneNumber(userPhoneNumber);
+        log.info(user);
+
+        // Password validator
+        if (user == null) {
+            throw new PhoneNumberInvalidException("User with phone number: " + userPhoneNumber + " does not exists!");
+        }
+
+        if (!new BCryptPasswordEncoder().matches(password, user.getPassword())) {
+            throw new CredentialsNotValidException("Incorrect Password!");
+        }
+
+        final UserDetails userDetails = userDetailsService.loadUserByUsername(user.getPhoneNumber());
+        final String jwt = jwtTokenUtil.generateToken(userDetails);
+
+        Response response = new Response("User " + user.getFullName() + " logged in successfully", jwt);
+        return response;
     }
 }

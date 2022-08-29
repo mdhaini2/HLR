@@ -1,6 +1,6 @@
 package com.hlr.hlr.UserSubscribeService;
 
-import com.hlr.hlr.Service.Service;
+import com.hlr.hlr.Service.Services;
 import com.hlr.hlr.Users.Users;
 
 import javax.persistence.*;
@@ -14,19 +14,25 @@ public class UserSubscribeService {
     private String status;
     private String currentData;
 
-
     private Date createdDate;
     private Date updateDate;
 
 
-
     @ManyToOne
     @JoinColumn(name = "service_id")
-    private Service service;
+    private Services services;
 
     @ManyToOne
     @JoinColumn(name = "users_id")
     private Users users;
+
+    public UserSubscribeService(String status, String currentData, Date createdDate, Services services, Users users) {
+        this.status = status;
+        this.currentData = currentData;
+        this.createdDate = createdDate;
+        this.services = services;
+        this.users = users;
+    }
 
     public Users getUsers() {
         return users;
@@ -36,15 +42,13 @@ public class UserSubscribeService {
         this.users = users;
     }
 
-    public Service getService() {
-        return service;
+    public Services getService() {
+        return services;
     }
 
-    public void setService(Service service) {
-        this.service = service;
+    public void setService(Services services) {
+        this.services = services;
     }
-
-
 
 
     public int getSubscriptionId() {
@@ -85,5 +89,13 @@ public class UserSubscribeService {
 
     public void setUpdateDate(Date updateDate) {
         this.updateDate = updateDate;
+    }
+
+    public Services getServices() {
+        return services;
+    }
+
+    public void setServices(Services services) {
+        this.services = services;
     }
 }
