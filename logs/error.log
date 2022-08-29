@@ -1364,3 +1364,4 @@ javax.persistence.NonUniqueResultException: query did not return a unique result
 	at org.apache.tomcat.util.threads.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:659)
 	at org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run(TaskThread.java:61)
 	at java.base/java.lang.Thread.run(Thread.java:829)
+level=ERROR ts=2022-08-29 17:17:11.339 caller=http-nio-8080-exec-1 component=com.hlr.hlr.Service.ServiceServices discovery=D msg=subscribeToService: user already subscribed to service

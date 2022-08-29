@@ -3,8 +3,11 @@ package com.hlr.hlr.UserSubscribeService;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.hlr.hlr.Service.Services;
 import com.hlr.hlr.Users.Users;
+import lombok.Value;
+import org.apache.logging.log4j.core.config.plugins.validation.constraints.ValidHost;
 
 import javax.persistence.*;
+import java.util.Calendar;
 import java.util.Date;
 import java.sql.Timestamp;
 
@@ -18,6 +21,7 @@ public class UserSubscribeService {
 
     private Date createdDate;
     private Date updateDate;
+    private Date expirationDate;
 
     @JsonIgnore
     @ManyToOne
@@ -38,6 +42,7 @@ public class UserSubscribeService {
         setCreatedDate(timeStamp);
         this.services = services;
         this.users = users;
+        setExpirationDate(services.getDuration());
     }
 
     public Users getUsers() {
@@ -108,5 +113,16 @@ public class UserSubscribeService {
 
     public void setServices(Services services) {
         this.services = services;
+    }
+
+    public Date getExpirationDate() {
+        return expirationDate;
+    }
+
+    public void setExpirationDate(int serviceDuration) {
+        Calendar expirationDate = Calendar.getInstance();
+        expirationDate.setTime(this.createdDate);
+        expirationDate.add(Calendar.DAY_OF_MONTH,serviceDuration);
+        this.expirationDate = expirationDate.getTime();
     }
 }
