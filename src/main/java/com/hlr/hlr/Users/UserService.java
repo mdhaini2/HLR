@@ -11,12 +11,12 @@ import com.hlr.hlr.Security.JwtUtil;
 import com.hlr.hlr.Security.MyUserDetailsService;
 import com.hlr.hlr.UserSubscribeService.UserSubscribeService;
 import com.hlr.hlr.UserSubscribeService.UserSubscribeServiceRepository;
+import com.hlr.hlr.LineType.LineType;
 import com.hlr.hlr.Utils.Response;
 import com.hlr.hlr.Utils.UserBalance;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -79,9 +79,9 @@ public class UserService {
             throw new PhoneNumberInvalidException("User with phone number: " + user.getPhoneNumber() + " already exists!");
         }
 
-        String lineType = user.getLineType().trim();
-        log.error("Line Type equals " + lineType.equalsIgnoreCase("prepaid"));
-        if (!lineType.equalsIgnoreCase("prepaid") && !lineType.equalsIgnoreCase("postpaid")) {
+        int lineTypeId = user.getLineType().getId();
+        log.error("Line Type equals " + lineTypeId);
+        if (lineTypeId != 0 && lineTypeId != 1) {
             log.error("Not valid line type " + user.getLineType());
             throw new CredentialsNotValidException(user.getLineType() + " is not a valid line type");
 
@@ -138,12 +138,17 @@ public class UserService {
 
         user.setAddress(updateUser.getAddress());
         user.setFullName(updateUser.getFullName());
-        String lineType = updateUser.getLineType();
-        if (!lineType.equalsIgnoreCase(user.getLineType())) {
+        LineType lineType = updateUser.getLineType();
+        if (lineType.getId() != user.getLineType().getId()) {
+            if(user.getLineType().getId()==1){
+                user.setBalance(0);
+            }
             user.setLineType(lineType);
             log.info("updateUserProfile: changing line type for user and deleting all services subscribed to");
+            if (!user.getUserSubscribeServiceSet().isEmpty()) {
+                userSubscribeServiceRepository.deleteByUsersId(user.getId());
+            }
 
-            userSubscribeServiceRepository.deleteByUsersId(user.getId());
         }
 
         user.setUpdatedDate(currentTimeStamp);
@@ -201,11 +206,11 @@ public class UserService {
     public Object checkBalance() {
         Users user = getUserFromToken();
         Set<UserSubscribeService> userSubscribeServiceSet = new HashSet<UserSubscribeService>();
-        String services="";
+        String services = "";
         for (UserSubscribeService userSubscribeService : user.getUserSubscribeServiceSet()) {
-            if (userSubscribeService.getStatus().equalsIgnoreCase("Active")) {
+            if (userSubscribeService.getIsActive()) {
                 userSubscribeServiceSet.add(userSubscribeService);
-                services+= userSubscribeService.toString();
+                services += userSubscribeService.toString();
             }
         }
 
@@ -215,12 +220,12 @@ public class UserService {
 
     public Object addCredits(double credits) throws CredentialsNotValidException {
         Users user = getUserFromToken();
-        if(user.getLineType().equalsIgnoreCase("postpaid")){
+        if (user.getLineType().getLineType().equalsIgnoreCase("postpaid")) {
             throw new CredentialsNotValidException("User have a postpaid line type can't add credits");
         }
-        user.setBalance(user.getBalance()+credits);
+        user.setBalance(user.getBalance() + credits);
         userRepository.save(user);
-        Response response = new Response("Added "+credits+" to user.",user.getBalance());
+        Response response = new Response("Added " + credits + " to user.", user.getBalance());
         return response;
     }
 }

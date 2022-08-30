@@ -19,13 +19,15 @@ public class ServiceController {
     @PostMapping(value = "/addService")
     public Object addService(@RequestBody Services services) throws ServiceAlreadyExistsException {
         return serviceServices.addService(services);
-    } @PostMapping(value = "/subscribeToService")
+    }
+
+    @PostMapping(value = "/subscribeToService")
     public Object subscribeToService(@RequestParam int serviceID) throws UserAlreadySubscribedToServiceException, InsufficientAmountException {
         return serviceServices.subscribeToService(serviceID);
     }
 
     @DeleteMapping(value = "/deleteService")
-    public Object deleteService(@RequestParam int serviceID){
+    public Object deleteService(@RequestParam int serviceID) {
         return serviceServices.deleteService(serviceID);
     }
 

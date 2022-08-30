@@ -95,14 +95,14 @@ public class ServiceServices {
         List<UserSubscribeService> subscribeServiceList = (List<UserSubscribeService>) userSubscribeServiceRepository.findUserSubscribedService(user.getId(),services.getId());
         if(!subscribeServiceList.isEmpty()){
             for(UserSubscribeService userSubscribeService : subscribeServiceList){
-                if(!userSubscribeService.getStatus().equalsIgnoreCase("expired")){
+                if(userSubscribeService.getIsActive()){
                     log.error("subscribeToService: user already subscribed to service");
                     throw new UserAlreadySubscribedToServiceException("user already subscribed to service "+services.getServiceName());
                 }
             }
         }
         String[] data = services.getData().split(" ");
-        if(user.getLineType().equalsIgnoreCase("PrePaid")){
+        if(user.getLineType().getLineType().equalsIgnoreCase("PrePaid")){
             if(user.getBalance()<services.getPrice()){
                 throw new InsufficientAmountException("User does not have enough balance please recharge Current balance: "+user.getBalance()+" USD");
             }
@@ -110,7 +110,7 @@ public class ServiceServices {
         }else{
             user.setBalance(Double.parseDouble(df.format(user.getBalance()+services.getPrice())));
         }
-        UserSubscribeService userSubscribeService = new UserSubscribeService("Active",
+        UserSubscribeService userSubscribeService = new UserSubscribeService(true,
                 services.getData(),
                 currentTimeStamp,
                 services,

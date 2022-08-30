@@ -2,6 +2,7 @@ package com.hlr.hlr.Users;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.hlr.hlr.UserSubscribeService.UserSubscribeService;
+import com.hlr.hlr.LineType.LineType;
 
 import javax.persistence.*;
 import java.sql.Timestamp;
@@ -15,9 +16,12 @@ public class Users {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
     private String fullName;
+    @Column(unique = true)
     private String phoneNumber;
     private String address;
-    private String lineType;
+    @ManyToOne
+    @JoinColumn(name = "line_type_id")
+    private LineType lineType;
     private Date birthday;
     private double balance;
 
@@ -66,13 +70,7 @@ public class Users {
         this.address = address;
     }
 
-    public String getLineType() {
-        return lineType;
-    }
 
-    public void setLineType(String lineType) {
-        this.lineType = lineType;
-    }
 
     public Date getBirthday() {
         return birthday;
@@ -126,4 +124,11 @@ public class Users {
         this.userSubscribeServiceSet = userSubscribeServiceSet;
     }
 
+    public LineType getLineType() {
+        return lineType;
+    }
+
+    public void setLineType(LineType lineType) {
+        this.lineType = lineType;
+    }
 }

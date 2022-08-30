@@ -3,8 +3,6 @@ package com.hlr.hlr.UserSubscribeService;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.hlr.hlr.Service.Services;
 import com.hlr.hlr.Users.Users;
-import lombok.Value;
-import org.apache.logging.log4j.core.config.plugins.validation.constraints.ValidHost;
 
 import javax.persistence.*;
 import java.util.Calendar;
@@ -16,7 +14,8 @@ public class UserSubscribeService {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int subscriptionId;
-    private String status;
+    @Column(nullable = true)
+    private boolean isActive;
     private String currentData;
 
     private Date createdDate;
@@ -36,8 +35,8 @@ public class UserSubscribeService {
     public UserSubscribeService() {
     }
 
-    public UserSubscribeService(String status, String currentData, long timeStamp, Services services, Users users) {
-        this.status = status;
+    public UserSubscribeService(boolean status, String currentData, long timeStamp, Services services, Users users) {
+        this.isActive = status;
         this.currentData = currentData;
         setCreatedDate(timeStamp);
         this.services = services;
@@ -70,12 +69,12 @@ public class UserSubscribeService {
         this.subscriptionId = subscriptionId;
     }
 
-    public String getStatus() {
-        return status;
+    public boolean getIsActive() {
+        return isActive;
     }
 
-    public void setStatus(String status) {
-        this.status = status;
+    public void setIsActive(boolean isActive) {
+        this.isActive = isActive;
     }
 
     public String getCurrentData() {
