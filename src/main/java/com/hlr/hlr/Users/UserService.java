@@ -142,9 +142,10 @@ public class UserService {
         if (!lineType.equalsIgnoreCase(user.getLineType())) {
             user.setLineType(lineType);
             log.info("updateUserProfile: changing line type for user and deleting all services subscribed to");
-            user.setUserSubscribeServiceSet(null);
-            userSubscribeServiceRepository.deleteByUsers(user);
+
+            userSubscribeServiceRepository.deleteByUsersId(user.getId());
         }
+
         user.setUpdatedDate(currentTimeStamp);
 
         log.info("updateUserProfile: saving user updates to Database");
