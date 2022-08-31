@@ -49,59 +49,44 @@ public class UserService {
 
     public Response registerUser(Users user) throws NumberParseException, PhoneNumberInvalidException, CredentialsNotValidException {
         // Phone number validator
-//        PhoneNumberUtil phoneNumberUtil = PhoneNumberUtil.getInstance();
-//        String userPhoneNumber = String.valueOf(user.getPhoneNumber());
-//        Phonenumber.PhoneNumber number = new Phonenumber.PhoneNumber();
-//
-//        number.setCountryCode(countryCode);
-//        char firstChar = userPhoneNumber.charAt(0);
-//        if (firstChar == '0') {
-//            number.setItalianLeadingZero(true);
-//            number.clearNumberOfLeadingZeros();
-//        }
-        log.info("Validate Number: "+validateNumber(user.getPhoneNumber(),"Lebanon"));
-//        number.setNationalNumber(Long.valueOf(userPhoneNumber));
-//        log.info("User Phone Number:" + String.valueOf(Long.valueOf(userPhoneNumber)));
 
-//        userPhoneNumber = String.valueOf(Long.valueOf(userPhoneNumber));
-//        user.setPhoneNumber(userPhoneNumber);
-//
-//
-//        if (!phoneNumberUtil.isPossibleNumber(number)) {
-//            log.error(user.getPhoneNumber() + " is not a valid phone number");
-//            throw new PhoneNumberInvalidException(user.getPhoneNumber() + " is not a valid phone number");
-//        }
-//
-//        Users existingUser = userRepository.findByPhoneNumber(user.getPhoneNumber());
-//
-//        if (existingUser != null) {
-//            log.error("User with phone number: " + user.getPhoneNumber() + " already exists!");
-//            throw new PhoneNumberInvalidException("User with phone number: " + user.getPhoneNumber() + " already exists!");
-//        }
-//
-//        int lineTypeId = user.getLineType().getId();
-//        log.error("Line Type equals " + lineTypeId);
-//        if (lineTypeId != 0 && lineTypeId != 1) {
-//            log.error("Not valid line type " + user.getLineType());
-//            throw new CredentialsNotValidException(user.getLineType() + " is not a valid line type");
-//
-//        }
-//
-//        if (user.getPassword() == null) {
-//            log.error("Password must not be null!");
-//            throw new CredentialsNotValidException("Password must not be null!");
-//        }
-//        log.info("Encrypting user password");
-//        user.setPassword(new BCryptPasswordEncoder().encode(user.getPassword()));
-//
-//        user.setCreatedDate(currentTimeStamp);
-//        user.setUpdatedDate(currentTimeStamp);
-//
-//        log.info("saving user to the database");
-//        userRepository.save(user);
-//
+        log.info("Validate Number: "+validateNumber(user.getPhoneNumber()));
+
+        if (!validateNumber(user.getPhoneNumber())) {
+            log.error(user.getPhoneNumber() + " is not a valid phone number");
+            throw new PhoneNumberInvalidException(user.getPhoneNumber() + " is not a valid phone number");
+        }
+
+        Users existingUser = userRepository.findByPhoneNumber(user.getPhoneNumber());
+
+        if (existingUser != null) {
+            log.error("User with phone number: " + user.getPhoneNumber() + " already exists!");
+            throw new PhoneNumberInvalidException("User with phone number: " + user.getPhoneNumber() + " already exists!");
+        }
+
+        int lineTypeId = user.getLineType().getId();
+        log.error("Line Type equals " + lineTypeId);
+        if (lineTypeId != 0 && lineTypeId != 1) {
+            log.error("Not valid line type " + user.getLineType());
+            throw new CredentialsNotValidException(user.getLineType() + " is not a valid line type");
+
+        }
+
+        if (user.getPassword() == null) {
+            log.error("Password must not be null!");
+            throw new CredentialsNotValidException("Password must not be null!");
+        }
+        log.info("Encrypting user password");
+        user.setPassword(new BCryptPasswordEncoder().encode(user.getPassword()));
+
+        user.setCreatedDate(currentTimeStamp);
+        user.setUpdatedDate(currentTimeStamp);
+
+        log.info("saving user to the database");
+        userRepository.save(user);
+
         String responseMessage = "User registered successfully";
-        Response response = new Response(responseMessage, user);
+        Response response = new Response(responseMessage,user);
         return response;
 
 
@@ -118,13 +103,12 @@ public class UserService {
         return response;
     }
 
-    private boolean validateNumber(String phoneNumbers, String country) throws NumberParseException {
+    private boolean validateNumber(String phoneNumbers) throws NumberParseException {
 
         PhoneNumberUtil numberUtil = PhoneNumberUtil.getInstance();
-
+        String country =
+        numberUtil.getRegionCodeForCountryCode(961);
         Phonenumber.PhoneNumber phoneNumber = numberUtil.parse(phoneNumbers, country);
-        phoneNumber.clearNumberOfLeadingZeros();
-        phoneNumber.setCountryCode(961);
         log.info("Validateeeeeee"+phoneNumber);
         boolean isValid = numberUtil.isValidNumber(phoneNumber);
         if (isValid) {
