@@ -47,7 +47,7 @@ public class UserService {
     private UserSubscribeServiceRepository userSubscribeServiceRepository;
     private long currentTimeStamp = System.currentTimeMillis();
 
-    public Object registerUser(Users user) throws NumberParseException, PhoneNumberInvalidException, CredentialsNotValidException {
+    public Response registerUser(Users user) throws NumberParseException, PhoneNumberInvalidException, CredentialsNotValidException {
         // Phone number validator
         PhoneNumberUtil phoneNumberUtil = PhoneNumberUtil.getInstance();
         String userPhoneNumber = String.valueOf(user.getPhoneNumber());
@@ -87,7 +87,11 @@ public class UserService {
 
         }
 
-
+        if (user.getPassword() == null) {
+            log.error("Password must not be null!");
+            throw new CredentialsNotValidException("Password must not be null!");
+        }
+        log.info("Encrypting user password");
         user.setPassword(new BCryptPasswordEncoder().encode(user.getPassword()));
 
         user.setCreatedDate(currentTimeStamp);
@@ -102,7 +106,7 @@ public class UserService {
 
     }
 
-    public Object getAllUsers() throws UsersNotFoundException {
+    public Response getAllUsers() throws UsersNotFoundException {
         log.info("Getting list of users");
         List<Users> usersList = userRepository.findAll();
         if (usersList.isEmpty()) {
@@ -113,7 +117,7 @@ public class UserService {
         return response;
     }
 
-    public Object deleteUser(int id) throws CredentialsNotValidException {
+    public Response deleteUser(int id) throws CredentialsNotValidException {
         Optional<Users> optimalUser = userRepository.findById(id);
 
         if (optimalUser.isEmpty()) {
@@ -132,15 +136,16 @@ public class UserService {
     }
 
     public Response updateUserProfile(Users updateUser) {
-
         Users user = getUserFromToken();
         log.info("updateUserProfile: got user from token");
 
         user.setAddress(updateUser.getAddress());
         user.setFullName(updateUser.getFullName());
         LineType lineType = updateUser.getLineType();
+
+        log.info("Checking if user want to change his lineType");
         if (lineType.getId() != user.getLineType().getId()) {
-            if(user.getLineType().getId()==1){
+            if (user.getLineType().getId() == 1) {
                 user.setBalance(0);
             }
             user.setLineType(lineType);
@@ -151,9 +156,8 @@ public class UserService {
 
         }
 
-        user.setUpdatedDate(currentTimeStamp);
-
         log.info("updateUserProfile: saving user updates to Database");
+        user.setUpdatedDate(currentTimeStamp);
         userRepository.save(user);
 
         log.info("User updated successfully");
@@ -162,7 +166,6 @@ public class UserService {
     }
 
     public Users getUserFromToken() {
-
         log.info("Get user from token");
         String token = jwtTokenUtil.getToken(request);
         String phoneNumber = jwtTokenUtil.extractUsername(token);
@@ -170,7 +173,7 @@ public class UserService {
         return user;
     }
 
-    public Object loginUser(String inputPhoneNumber, String password) throws PhoneNumberInvalidException, NumberParseException, CredentialsNotValidException {
+    public Response loginUser(String inputPhoneNumber, String password) throws PhoneNumberInvalidException, NumberParseException, CredentialsNotValidException {
         // Phone number validator
         PhoneNumberUtil phoneNumberUtil = PhoneNumberUtil.getInstance();
         String userPhoneNumber = String.valueOf(inputPhoneNumber);
@@ -178,8 +181,9 @@ public class UserService {
         number.setCountryCode(countryCode);
         number.setNationalNumber(Long.valueOf(userPhoneNumber));
 
-        log.info(phoneNumberUtil.isPossibleNumber(number));
+        log.info("Checking if phone number is valid");
         if (!phoneNumberUtil.isPossibleNumber(number)) {
+            log.error(inputPhoneNumber + " is not a valid phone number");
             throw new PhoneNumberInvalidException(inputPhoneNumber + " is not a valid phone number");
         }
 
@@ -189,13 +193,16 @@ public class UserService {
 
         // Password validator
         if (user == null) {
+            log.error("User with phone number: " + userPhoneNumber + " does not exists!");
             throw new PhoneNumberInvalidException("User with phone number: " + userPhoneNumber + " does not exists!");
         }
-
+        log.info("Checking if password is correct!");
         if (!new BCryptPasswordEncoder().matches(password, user.getPassword())) {
+            log.error("Incorrect Password!");
             throw new CredentialsNotValidException("Incorrect Password!");
         }
 
+        log.info("Generating new token for logged in user");
         final UserDetails userDetails = userDetailsService.loadUserByUsername(user.getPhoneNumber());
         final String jwt = jwtTokenUtil.generateToken(userDetails);
 
@@ -203,10 +210,11 @@ public class UserService {
         return response;
     }
 
-    public Object checkBalance() {
+    public Response checkBalance() {
         Users user = getUserFromToken();
         Set<UserSubscribeService> userSubscribeServiceSet = new HashSet<UserSubscribeService>();
         String services = "";
+        log.info("adding active services to userSubscribeServiceSet");
         for (UserSubscribeService userSubscribeService : user.getUserSubscribeServiceSet()) {
             if (userSubscribeService.getIsActive()) {
                 userSubscribeServiceSet.add(userSubscribeService);
@@ -215,16 +223,20 @@ public class UserService {
         }
 
         UserBalance userBalance = new UserBalance(user.getBalance(), services);
-        return userBalance;
+        Response response = new Response("User balance retrieved successfully", userBalance);
+        return response;
     }
 
-    public Object addCredits(double credits) throws CredentialsNotValidException {
+    public Response addCredits(double credits) throws CredentialsNotValidException {
         Users user = getUserFromToken();
         if (user.getLineType().getLineType().equalsIgnoreCase("postpaid")) {
+            log.error("User have a postpaid line type can't add credits");
             throw new CredentialsNotValidException("User have a postpaid line type can't add credits");
         }
         user.setBalance(user.getBalance() + credits);
+        log.info("Saving users new credit to the DB");
         userRepository.save(user);
+
         Response response = new Response("Added " + credits + " to user.", user.getBalance());
         return response;
     }

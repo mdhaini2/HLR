@@ -14,6 +14,15 @@ import java.sql.SQLException;
 public class GlobalException {
 
     @ExceptionHandler
+    public ResponseEntity<ResponseError> handleException(Exception exception) {
+        ResponseError errorObject = new ResponseError();
+        errorObject.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
+        errorObject.setMessage(exception.getMessage());
+        errorObject.setTime(System.currentTimeMillis());
+        return new ResponseEntity<ResponseError>(errorObject, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    @ExceptionHandler
     public ResponseEntity<ResponseError> handlePhoneNumberInvalidException(PhoneNumberInvalidException exception) {
         ResponseError errorObject = new ResponseError();
         errorObject.setStatus(HttpStatus.BAD_REQUEST.value());

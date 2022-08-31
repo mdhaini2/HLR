@@ -41,13 +41,14 @@ public class ServiceServices {
     private static final DecimalFormat df = new DecimalFormat("0.00");
 
 
-    public Object addService(Services services) throws ServiceAlreadyExistsException {
+    public Response addService(Services services) throws ServiceAlreadyExistsException {
         log.info("addService: adding new service to DB");
         services.setUpdatedDate(currentTimeStamp);
         services.setCreatedDate(currentTimeStamp);
         Services services1 = serviceRepository.findByServiceName(services.getServiceName());
-        if(services1 !=null){
-            throw new ServiceAlreadyExistsException("Service: "+ services.getServiceName()+" already exists");
+        if (services1 != null) {
+            log.error("addService: " + services.getServiceName() + " already exists");
+            throw new ServiceAlreadyExistsException("addService: " + services.getServiceName() + " already exists");
         }
         serviceRepository.save(services);
         Response response = new Response("New service added successfully", services);
@@ -55,7 +56,7 @@ public class ServiceServices {
     }
 
 
-    public Object deleteService(int serviceID) {
+    public Response deleteService(int serviceID) {
         Optional<Services> optimalServices = serviceRepository.findById(serviceID);
         if (optimalServices.isEmpty()) {
             log.error("deleteService: Service with service id: " + serviceID + " does not exists!");
@@ -71,7 +72,7 @@ public class ServiceServices {
     }
 
 
-    public Object getAllServices() throws ServerCloneException {
+    public Response getAllServices() throws ServerCloneException {
         List<Services> servicesList = serviceRepository.findAll();
         if (servicesList.isEmpty()) {
             log.error("getAllServices: No Services Found");
@@ -82,63 +83,74 @@ public class ServiceServices {
         return response;
     }
 
-    public Object subscribeToService(int serviceID) throws UserAlreadySubscribedToServiceException, InsufficientAmountException {
+    public Response subscribeToService(int serviceID) throws UserAlreadySubscribedToServiceException, InsufficientAmountException {
         Users user = getUserFromToken();
-
+        log.info("Getting service with service id: " + serviceID + " from the DB");
         Optional<Services> service = serviceRepository.findById(serviceID);
         if (service.isEmpty()) {
-            log.error("subscribeToService:Service with service id: " + serviceID + " does not exist");
+            log.error("subscribeToService: Service with service id: " + serviceID + " does not exist");
             throw new BadCredentialsException("Service with service id:" + serviceID + " does not exist");
         }
 
         Services services = service.get();
-        List<UserSubscribeService> subscribeServiceList = (List<UserSubscribeService>) userSubscribeServiceRepository.findUserSubscribedService(user.getId(),services.getId());
-        if(!subscribeServiceList.isEmpty()){
-            for(UserSubscribeService userSubscribeService : subscribeServiceList){
-                if(userSubscribeService.getIsActive()){
+        List<UserSubscribeService> subscribeServiceList = (List<UserSubscribeService>) userSubscribeServiceRepository.findUserSubscribedService(user.getId(), services.getId());
+        if (!subscribeServiceList.isEmpty()) {
+            for (UserSubscribeService userSubscribeService : subscribeServiceList) {
+                if (userSubscribeService.getIsActive()) {
                     log.error("subscribeToService: user already subscribed to service");
-                    throw new UserAlreadySubscribedToServiceException("user already subscribed to service "+services.getServiceName());
+                    throw new UserAlreadySubscribedToServiceException("user already subscribed to service " + services.getServiceName());
                 }
             }
         }
-        String[] data = services.getData().split(" ");
-        if(user.getLineType().getLineType().equalsIgnoreCase("PrePaid")){
-            if(user.getBalance()<services.getPrice()){
-                throw new InsufficientAmountException("User does not have enough balance please recharge Current balance: "+user.getBalance()+" USD");
+
+        if (user.getLineType().getLineType().equalsIgnoreCase("PrePaid")) {
+            if (user.getBalance() < services.getPrice()) {
+                log.error("User does not have enough balance please recharge Current balance: ");
+                throw new InsufficientAmountException("User does not have enough balance please recharge Current balance: " + user.getBalance() + " USD");
             }
-            user.setBalance(Double.parseDouble(df.format(user.getBalance()-services.getPrice())));
-        }else{
-            user.setBalance(Double.parseDouble(df.format(user.getBalance()+services.getPrice())));
+            log.info("subtracting from user's prepaid balance");
+            user.setBalance(Double.parseDouble(df.format(user.getBalance() - services.getPrice())));
+        } else {
+            log.info("adding to user's postpaid balance");
+            user.setBalance(Double.parseDouble(df.format(user.getBalance() + services.getPrice())));
         }
+        log.info("Creating userSubscribeService data");
         UserSubscribeService userSubscribeService = new UserSubscribeService(true,
                 services.getData(),
                 currentTimeStamp,
                 services,
                 user);
         userSubscribeService.setUpdateDate(currentTimeStamp);
+        log.info("adding new subscription service to the database for user:"+user.getFullName());
         userSubscribeServiceRepository.save(userSubscribeService);
 
-        Set<UserSubscribeService> userSubscribeServicesSet= user.getUserSubscribeServiceSet();
-        if(userSubscribeServicesSet== null){
+        log.info("Getting the list of service user "+user.getFullName()+" subscribed to");
+        Set<UserSubscribeService> userSubscribeServicesSet = user.getUserSubscribeServiceSet();
+        if (userSubscribeServicesSet == null) {
+            log.info("user "+user.getFullName()+" doesn't have any previous subscription. Creating new list");
             userSubscribeServicesSet = new HashSet<UserSubscribeService>();
             userSubscribeServicesSet.add(userSubscribeService);
-        }else{
+        } else {
+            log.info("added new service subscription to userSubscriptionSet");
             userSubscribeServicesSet.add(userSubscribeService);
         }
+        log.info("updating subscription services list");
         user.setUserSubscribeServiceSet(userSubscribeServicesSet);
         userRepository.save(user);
 
+
+
         Set<UserSubscribeService> usersSubscribedServiceSet = services.getUserSubscribedService();
-        if(usersSubscribedServiceSet==null){
+        if (usersSubscribedServiceSet == null) {
             usersSubscribedServiceSet = new HashSet<UserSubscribeService>();
             usersSubscribedServiceSet.add(userSubscribeService);
-        }else{
+        } else {
             usersSubscribedServiceSet.add(userSubscribeService);
         }
         services.setUserSubscribedService(usersSubscribedServiceSet);
         serviceRepository.save(services);
 
-        Response response = new Response("User subscribed successfully to service "+services.getServiceName(),userSubscribeService);
+        Response response = new Response("User subscribed successfully to service " + services.getServiceName(), userSubscribeService);
         return response;
     }
 
