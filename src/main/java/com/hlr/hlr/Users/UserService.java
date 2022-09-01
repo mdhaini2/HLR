@@ -50,8 +50,6 @@ public class UserService {
     public Response registerUser(Users user) throws NumberParseException, PhoneNumberInvalidException, CredentialsNotValidException {
         // Phone number validator
 
-        log.info("Validate Number: "+validateNumber(user.getPhoneNumber()));
-
         if (!validateNumber(user.getPhoneNumber())) {
             log.error(user.getPhoneNumber() + " is not a valid phone number");
             throw new PhoneNumberInvalidException(user.getPhoneNumber() + " is not a valid phone number");
@@ -109,7 +107,7 @@ public class UserService {
         String country =
         numberUtil.getRegionCodeForCountryCode(961);
         Phonenumber.PhoneNumber phoneNumber = numberUtil.parse(phoneNumbers, country);
-        log.info("Validateeeeeee"+phoneNumber);
+        log.info("validateNumber: "+phoneNumber);
         boolean isValid = numberUtil.isValidNumber(phoneNumber);
         if (isValid) {
             return true;
@@ -177,19 +175,13 @@ public class UserService {
     public Response loginUser(String inputPhoneNumber, String password) throws
             PhoneNumberInvalidException, NumberParseException, CredentialsNotValidException {
         // Phone number validator
-        PhoneNumberUtil phoneNumberUtil = PhoneNumberUtil.getInstance();
-        String userPhoneNumber = String.valueOf(inputPhoneNumber);
-        Phonenumber.PhoneNumber number = new Phonenumber.PhoneNumber();
-        number.setCountryCode(countryCode);
-        number.setNationalNumber(Long.valueOf(userPhoneNumber));
 
-        log.info("Checking if phone number is valid");
-        if (!phoneNumberUtil.isPossibleNumber(number)) {
+        if (!validateNumber(inputPhoneNumber)) {
             log.error(inputPhoneNumber + " is not a valid phone number");
             throw new PhoneNumberInvalidException(inputPhoneNumber + " is not a valid phone number");
         }
 
-        userPhoneNumber = String.valueOf(Long.valueOf(userPhoneNumber));
+        String userPhoneNumber = inputPhoneNumber;
         Users user = userRepository.findByPhoneNumber(userPhoneNumber);
         log.info(user);
 
